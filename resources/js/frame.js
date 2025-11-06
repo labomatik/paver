@@ -169,28 +169,78 @@ window.PaverFrame = function (data) {
                 let editingBlock = JSON.parse(JSON.stringify(this.editingBlock))
 
                 // Rebuild the child blocks in case they have changed.
-                function getBlocks(element) {
-                    let blocks = []
+                // This function MUST mirror the exact logic in gatherBlocks() from paver.js
+                // to correctly handle nested sortable containers (like grid cells)
+                function gatherBlocks(list) {
+                    let blocks = list.querySelectorAll(':scope > .paver__sortable-item')
+                    let newBlocks = []
 
-                    Array.from(element.children).forEach((el) => {
-                        if (el.hasAttribute('data-block')) {
-                            let block = JSON.parse(el.getAttribute('data-block'))
-                            block.children = getBlocks(el)
-                            blocks.push(block)
-                        } else {
-                            let nestedBlocks = getBlocks(el)
-
-                            blocks = blocks.concat(nestedBlocks)
+                    blocks.forEach(block => {
+                        // Check if this sortable item has a data-block attribute
+                        // Grid cells are sortable-items but don't have data-block
+                        if (!block.hasAttribute('data-block')) {
+                            // This is a wrapper (like a grid cell), collect from its sortable container
+                            let childList = block.querySelector('.paver__sortable')
+                            if (childList) {
+                                // Recursively gather blocks from the nested sortable
+                                let childBlocks = gatherBlocks(childList)
+                                newBlocks = newBlocks.concat(childBlocks)
+                            }
+                            return
                         }
+
+                        let blockData = JSON.parse(block.getAttribute('data-block'))
+
+                        // A block can have multiple sortable containers (e.g., grid cells)
+                        let childLists = block.querySelectorAll('.paver__sortable')
+
+                        if (childLists.length > 1) {
+                            // Multiple sortables (like grid cells): create array of arrays
+                            let childrenByCell = []
+
+                            childLists.forEach(childList => {
+                                let cellBlocks = gatherBlocks(childList)
+                                childrenByCell.push(cellBlocks)
+                            })
+
+                            blockData.children = childrenByCell
+                        } else if (childLists.length === 1) {
+                            // Single sortable: use flat array (normal behavior)
+                            blockData.children = gatherBlocks(childLists[0])
+                        }
+
+                        newBlocks.push(blockData)
                     })
 
-                    return blocks
+                    return newBlocks
                 }
 
-                if (this.editingElement.querySelectorAll('[data-block]').length > 0) {
-                    let children = getBlocks(this.editingElement)
-                    editingBlock.children = children
+                // Handle blocks with children (including special cases like grids with multiple cells)
+                // Find all sortable containers within the editing element
+                let sortableContainers = this.editingElement.querySelectorAll('.paver__sortable')
+
+                console.log('[PAVER FRAME] Found sortable containers:', sortableContainers.length)
+
+                if (sortableContainers.length > 1) {
+                    // Multiple sortables (like grid cells): create array of arrays
+                    let childrenByCell = []
+
+                    sortableContainers.forEach((sortableContainer, index) => {
+                        let cellBlocks = gatherBlocks(sortableContainer)
+                        console.log(`[PAVER FRAME] Cell ${index} has ${cellBlocks.length} blocks:`, cellBlocks)
+                        childrenByCell.push(cellBlocks)
+                    })
+
+                    console.log('[PAVER FRAME] Children by cell:', childrenByCell)
+                    editingBlock.children = childrenByCell
+                } else if (sortableContainers.length === 1) {
+                    // Single sortable: use flat array (normal behavior)
+                    let blocks = gatherBlocks(sortableContainers[0])
+                    console.log('[PAVER FRAME] Single sortable with', blocks.length, 'blocks')
+                    editingBlock.children = blocks
                 }
+
+                console.log('[PAVER FRAME] Final editingBlock.children:', editingBlock.children)
 
                 const response = await this.api.renderBlock(editingBlock)
 
