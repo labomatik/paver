@@ -519,12 +519,37 @@ window.Paver = function (data) {
                 let newBlocks = []
 
                 blocks.forEach(block => {
+                    // Check if this sortable item has a data-block attribute
+                    // Grid cells are sortable-items but don't have data-block
+                    if (!block.hasAttribute('data-block')) {
+                        // This is a wrapper (like a grid cell), collect from its sortable container
+                        let childList = block.querySelector('.paver__sortable')
+                        if (childList) {
+                            // Recursively gather blocks from the nested sortable
+                            let childBlocks = gatherBlocks(childList)
+                            newBlocks = newBlocks.concat(childBlocks)
+                        }
+                        return
+                    }
+
                     let blockData = JSON.parse(block.getAttribute('data-block'))
 
-                    let childList = block.querySelector('.paver__sortable')
+                    // A block can have multiple sortable containers (e.g., grid cells)
+                    let childLists = block.querySelectorAll('.paver__sortable')
 
-                    if (childList) {
-                        blockData.children = gatherBlocks(childList)
+                    if (childLists.length > 1) {
+                        // Multiple sortables (like grid cells): create array of arrays
+                        let childrenByCell = []
+
+                        childLists.forEach(childList => {
+                            let cellBlocks = gatherBlocks(childList)
+                            childrenByCell.push(cellBlocks)
+                        })
+
+                        blockData.children = childrenByCell
+                    } else if (childLists.length === 1) {
+                        // Single sortable: use flat array (normal behavior)
+                        blockData.children = gatherBlocks(childLists[0])
                     }
 
                     newBlocks.push(blockData)

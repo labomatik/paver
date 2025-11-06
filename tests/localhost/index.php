@@ -4,6 +4,7 @@ use Jeffreyvr\Paver\Blocks\Example;
 use Jeffreyvr\Paver\Paver;
 
 require __DIR__ . '/../../vendor/autoload.php';
+require __DIR__ . '/TestGrid.php';
 
 $paver = Paver::instance();
 
@@ -18,11 +19,32 @@ $paver->frame->headHtml = <<<HTML
 HTML;
 
 $paver->registerBlock(Example::class);
+$paver->registerBlock(TestGrid::class);
 
 $content = [];
 
 if(isset($_GET['content'])) {
     $content[] = ['block' => 'paver.example'];
+}
+
+if(isset($_GET['grid'])) {
+    $content[] = [
+        'block' => 'test.grid',
+        'children' => [
+            // Cell 0: has one block
+            [
+                ['block' => 'paver.example', 'data' => ['name' => 'Block in Cell 0']]
+            ],
+            // Cell 1: empty
+            [],
+            // Cell 2: has one block
+            [
+                ['block' => 'paver.example', 'data' => ['name' => 'Block in Cell 2']]
+            ],
+            // Cell 3: empty
+            []
+        ]
+    ];
 }
 
 require 'endpoints.php';
