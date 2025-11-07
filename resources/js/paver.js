@@ -2,6 +2,7 @@ import Localization from './localization.js'
 import Shortcuts from './shortcuts.js'
 import ApiClient from './apiClient.js'
 import morph from '@alpinejs/morph'
+import collapse from '@alpinejs/collapse'
 import History from './history.js'
 import helpers from './helpers.js'
 import Sortable from 'sortablejs'
@@ -12,6 +13,7 @@ import './alpine/tooltip.js'
 import './resizer.js'
 
 Alpine.plugin(morph)
+Alpine.plugin(collapse)
 
 window.Paver = function (data) {
     return {
@@ -51,8 +53,11 @@ window.Paver = function (data) {
             search: '',
             showAll: false,
             limit: data.blockInserterLimit ?? 6,
-            showExpandButton: false
+            showExpandButton: false,
+            visibleCount: 0
         },
+
+        blocksPanelTempOpen: false,
 
         buttons: {
             expandButton: data.showExpandButton ?? true,
@@ -170,21 +175,34 @@ window.Paver = function (data) {
             Shortcuts.expand(() => this.toggleExpand())
             Shortcuts.exit(() => this.handleEscape())
 
-            Sortable.create(this.$refs.blocksInserter, {
-                ghostClass: "paver__sortable-ghost",
-                chosenClass: "paver__sortable-chosen",
-                dragClass: "paver__sortable-drag",
-                group: {
-                    name: 'shared',
-                    pull: 'clone',
-                    put: false,
-                    revertClone: false
-                },
-                sort: false,
-                animation: 150,
-                onStart: (evt) => {
-                    evt.clone.setAttribute('x-ignore', '')
-                },
+            // Initialize Sortable for all category block grids
+            this.initializeSortableCategories()
+        },
+
+        initializeSortableCategories() {
+            const sortableContainers = document.querySelectorAll('.paver__category .paver__sortable')
+
+            sortableContainers.forEach((container) => {
+                Sortable.create(container, {
+                    ghostClass: "paver__sortable-ghost",
+                    chosenClass: "paver__sortable-chosen",
+                    dragClass: "paver__sortable-drag",
+                    group: {
+                        name: 'shared',
+                        pull: 'clone',
+                        put: false,
+                        revertClone: false
+                    },
+                    sort: false,
+                    animation: 150,
+                    onStart: (evt) => {
+                        evt.clone.setAttribute('x-ignore', '')
+                    },
+                    onEnd: (evt) => {
+                        // Close the blocks panel after drag & drop
+                        this.blocksPanelTempOpen = false
+                    }
+                })
             })
         },
 
@@ -313,34 +331,106 @@ window.Paver = function (data) {
         determineVisibleInsertableBlocks() {
             const searchTerm = this.blockInserter.search.trim().toLowerCase()
             const allowedBlocks = this.allowedBlocks.length ? this.allowedBlocks : null
-            const blocks = this.$refs.blocksInserter.querySelectorAll('.paver__block-handle')
+            const categories = document.querySelectorAll('.paver__category')
 
             let visibleCount = 0
             let totalVisible = 0
 
-            blocks.forEach(block => {
-                const blockData = JSON.parse(block.getAttribute('data-block'))
-                const blockName = blockData.block.trim().toLowerCase()
-                const isHidden = block.classList.contains('paver__hide_from_block_inserter')
-                const matchesSearch = !searchTerm || blockName.includes(searchTerm)
-                const isAllowed = !allowedBlocks || allowedBlocks.includes(blockName)
-                const withinLimit = this.blockInserter.showAll || visibleCount < this.blockInserter.limit
+            // If searching, hide the category structure and show all blocks flat
+            if (searchTerm) {
+                categories.forEach(category => {
+                    // Add searching class to force block grid visibility via CSS
+                    // This preserves Alpine.js internal state
+                    category.classList.add('paver__category--searching')
 
-                if (isHidden && (!allowedBlocks || !allowedBlocks.includes(blockName))) {
-                    block.style.display = 'none'
-                    return
-                }
+                    // Hide the category toggle/header
+                    const categoryToggle = category.querySelector('.paver__category-toggle')
+                    if (categoryToggle) {
+                        categoryToggle.style.display = 'none'
+                    }
 
-                if (matchesSearch && isAllowed) {
-                    totalVisible++
-                    block.style.display = withinLimit ? 'flex' : 'none'
-                    if (withinLimit) visibleCount++
-                } else {
-                    block.style.display = 'none'
-                }
-            })
+                    const blocks = category.querySelectorAll('.paver__block-handle')
+                    let categoryHasVisibleBlocks = false
+
+                    blocks.forEach(block => {
+                        const blockData = JSON.parse(block.getAttribute('data-block'))
+                        const blockReference = blockData.block.trim().toLowerCase()
+                        const blockName = blockData.name ? blockData.name.trim().toLowerCase() : ''
+                        const isHidden = block.classList.contains('paver__hide_from_block_inserter')
+                        const matchesSearch = blockReference.includes(searchTerm) || blockName.includes(searchTerm)
+                        const isAllowed = !allowedBlocks || allowedBlocks.includes(blockReference)
+                        const withinLimit = this.blockInserter.showAll || visibleCount < this.blockInserter.limit
+
+                        if (isHidden && (!allowedBlocks || !allowedBlocks.includes(blockReference))) {
+                            block.style.display = 'none'
+                            return
+                        }
+
+                        if (matchesSearch && isAllowed) {
+                            totalVisible++
+                            categoryHasVisibleBlocks = true
+                            block.style.display = withinLimit ? 'flex' : 'none'
+                            if (withinLimit) visibleCount++
+                        } else {
+                            block.style.display = 'none'
+                        }
+                    })
+
+                    // Hide category completely if no visible blocks
+                    if (categoryHasVisibleBlocks) {
+                        category.classList.remove('paver__category--hidden')
+                    } else {
+                        category.classList.add('paver__category--hidden')
+                    }
+                })
+            } else {
+                // Not searching - restore normal category structure
+                categories.forEach(category => {
+                    // Remove searching class to restore Alpine control
+                    category.classList.remove('paver__category--searching')
+
+                    // Show the category toggle/header
+                    const categoryToggle = category.querySelector('.paver__category-toggle')
+                    if (categoryToggle) {
+                        categoryToggle.style.display = ''
+                    }
+
+                    const blocks = category.querySelectorAll('.paver__block-handle')
+                    let categoryHasVisibleBlocks = false
+
+                    blocks.forEach(block => {
+                        const blockData = JSON.parse(block.getAttribute('data-block'))
+                        const blockReference = blockData.block.trim().toLowerCase()
+                        const isHidden = block.classList.contains('paver__hide_from_block_inserter')
+                        const isAllowed = !allowedBlocks || allowedBlocks.includes(blockReference)
+                        const withinLimit = this.blockInserter.showAll || visibleCount < this.blockInserter.limit
+
+                        if (isHidden && (!allowedBlocks || !allowedBlocks.includes(blockReference))) {
+                            block.style.display = 'none'
+                            return
+                        }
+
+                        if (isAllowed) {
+                            totalVisible++
+                            categoryHasVisibleBlocks = true
+                            block.style.display = withinLimit ? 'flex' : 'none'
+                            if (withinLimit) visibleCount++
+                        } else {
+                            block.style.display = 'none'
+                        }
+                    })
+
+                    // Hide category if no visible blocks (e.g., due to allowedBlocks restrictions)
+                    if (categoryHasVisibleBlocks) {
+                        category.classList.remove('paver__category--hidden')
+                    } else {
+                        category.classList.add('paver__category--hidden')
+                    }
+                })
+            }
 
             this.blockInserter.showExpandButton = totalVisible > this.blockInserter.limit
+            this.blockInserter.visibleCount = totalVisible
         },
 
         root() {
@@ -454,7 +544,8 @@ window.Paver = function (data) {
                 direction: element.getAttribute('data-direction') || 'vertical',
                 animation: 150,
                 onAdd: (evt) => {
-                    if(evt.from === this.$refs.blocksInserter) {
+                    // Check if the source is a block inserter (from any category)
+                    if(evt.from.closest('.paver__category')) {
                         this.fetchBlock(evt)
                     }
                 },
@@ -518,35 +609,44 @@ window.Paver = function (data) {
                 let blocks = list.querySelectorAll(':scope > .paver__sortable-item')
                 let newBlocks = []
 
-                blocks.forEach(block => {
+                console.log('[PAVER GATHER] Processing', blocks.length, 'sortable items')
+
+                blocks.forEach((block, index) => {
                     // Check if this sortable item has a data-block attribute
                     // Grid cells are sortable-items but don't have data-block
                     if (!block.hasAttribute('data-block')) {
+                        console.log('[PAVER GATHER] Item', index, 'is a WRAPPER (no data-block)')
                         // This is a wrapper (like a grid cell), collect from its sortable container
                         let childList = block.querySelector('.paver__sortable')
                         if (childList) {
                             // Recursively gather blocks from the nested sortable
                             let childBlocks = gatherBlocks(childList)
+                            console.log('[PAVER GATHER] Wrapper contains', childBlocks.length, 'blocks')
                             newBlocks = newBlocks.concat(childBlocks)
                         }
                         return
                     }
 
                     let blockData = JSON.parse(block.getAttribute('data-block'))
+                    console.log('[PAVER GATHER] Item', index, 'is BLOCK:', blockData.block)
 
                     // A block can have multiple sortable containers (e.g., grid cells)
                     let childLists = block.querySelectorAll('.paver__sortable')
+                    console.log('[PAVER GATHER] Block has', childLists.length, 'sortable containers')
 
                     if (childLists.length > 1) {
                         // Multiple sortables (like grid cells): create array of arrays
+                        console.log('[PAVER GATHER] Creating ARRAY OF ARRAYS for', childLists.length, 'cells')
                         let childrenByCell = []
 
-                        childLists.forEach(childList => {
+                        childLists.forEach((childList, cellIndex) => {
                             let cellBlocks = gatherBlocks(childList)
+                            console.log('[PAVER GATHER] Cell', cellIndex, 'contains', cellBlocks.length, 'blocks')
                             childrenByCell.push(cellBlocks)
                         })
 
                         blockData.children = childrenByCell
+                        console.log('[PAVER GATHER] Final children structure:', JSON.stringify(blockData.children))
                     } else if (childLists.length === 1) {
                         // Single sortable: use flat array (normal behavior)
                         blockData.children = gatherBlocks(childLists[0])
@@ -555,6 +655,7 @@ window.Paver = function (data) {
                     newBlocks.push(blockData)
                 })
 
+                console.log('[PAVER GATHER] Returning', newBlocks.length, 'blocks')
                 return newBlocks
             }
 

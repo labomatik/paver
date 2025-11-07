@@ -5,6 +5,9 @@ use Jeffreyvr\Paver\Paver;
 
 require __DIR__ . '/../../vendor/autoload.php';
 require __DIR__ . '/TestGrid.php';
+require __DIR__ . '/TestLayoutBlock.php';
+require __DIR__ . '/TestContentBlock.php';
+require __DIR__ . '/TestMediaBlock.php';
 
 $paver = Paver::instance();
 
@@ -20,6 +23,9 @@ HTML;
 
 $paver->registerBlock(Example::class);
 $paver->registerBlock(TestGrid::class);
+$paver->registerBlock(TestLayoutBlock::class);
+$paver->registerBlock(TestContentBlock::class);
+$paver->registerBlock(TestMediaBlock::class);
 
 $content = [];
 

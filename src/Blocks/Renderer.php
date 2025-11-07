@@ -39,7 +39,6 @@ class Renderer
         if (empty($this->block->children)) {
             return $output;
         }
-        // ray($this->block->children)->purple();
 
         $originalBlock = $this->block;
 

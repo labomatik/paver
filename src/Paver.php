@@ -101,6 +101,7 @@ class Paver
                 'name' => $instance->name,
                 'reference' => $instance::$reference,
                 'icon' => $instance->getIcon(),
+                'category' => $instance->category,
             ];
 
             if ($withInstance) {

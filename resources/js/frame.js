@@ -175,7 +175,8 @@ window.PaverFrame = function (data) {
                     let blocks = list.querySelectorAll(':scope > .paver__sortable-item')
                     let newBlocks = []
 
-                    blocks.forEach(block => {
+
+                    blocks.forEach((block, index) => {
                         // Check if this sortable item has a data-block attribute
                         // Grid cells are sortable-items but don't have data-block
                         if (!block.hasAttribute('data-block')) {
@@ -198,7 +199,7 @@ window.PaverFrame = function (data) {
                             // Multiple sortables (like grid cells): create array of arrays
                             let childrenByCell = []
 
-                            childLists.forEach(childList => {
+                            childLists.forEach((childList, cellIndex) => {
                                 let cellBlocks = gatherBlocks(childList)
                                 childrenByCell.push(cellBlocks)
                             })

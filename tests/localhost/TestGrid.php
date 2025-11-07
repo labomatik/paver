@@ -11,6 +11,8 @@ class TestGrid extends Block
 
     public static string $reference = 'test.grid';
 
+    public string $category = 'Paver Examples';
+
     public array $allowedChildrenBlocks = [
         'paver.example',
     ];
