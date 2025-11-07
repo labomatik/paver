@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, json
+          coverage: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install PHP dependencies
+        run: composer install --prefer-dist --no-progress --no-suggest
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Compile assets with Laravel Mix
+        run: npx mix --production
+
+      - name: Verify compiled assets
+        run: |
+          if [ ! -f "assets/js/paver.js" ]; then
+            echo "Error: assets/js/paver.js not found"
+            exit 1
+          fi
+          if [ ! -f "assets/css/paver.css" ]; then
+            echo "Error: assets/css/paver.css not found"
+            exit 1
+          fi
+          echo "All assets compiled successfully"
+
+      - name: Run Cypress tests
+        uses: cypress-io/github-action@v6
+        with:
+          start: php -S localhost:8000 -t ./tests/localhost
+          wait-on: 'http://localhost:8000'
+          wait-on-timeout: 30
+          browser: chrome
+          headless: true
+
+      - name: Upload Cypress screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+          if-no-files-found: ignore
+
+      - name: Upload Cypress videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-videos
+          path: cypress/videos
+          if-no-files-found: ignore
