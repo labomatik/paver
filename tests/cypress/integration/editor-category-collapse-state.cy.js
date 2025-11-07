@@ -7,11 +7,26 @@ describe('Editor - Category Collapse State Persistence', () => {
         // Step 1: Collapse some categories initially
         cy.get('.paver__category').then($categories => {
             if ($categories.length > 1) {
-                // Collapse the second category
+                // First, ensure the second category is initially open
+                cy.get('.paver__category').eq(1).within(() => {
+                    // If it's already closed, open it first
+                    cy.get('.paver__block-grid').then($grid => {
+                        if (!$grid.is(':visible')) {
+                            cy.get('.paver__category-toggle').click()
+                            cy.wait(500)
+                        }
+                    })
+                })
+
+                // Now collapse the second category
                 cy.get('.paver__category').eq(1).within(() => {
                     cy.get('.paver__category-toggle').click()
-                    cy.wait(300)
-                    cy.get('.paver__block-grid').should('not.be.visible')
+                    // Wait for Alpine's x-collapse animation to complete
+                    // Check both visibility and that animation is complete (display:none)
+                    cy.get('.paver__block-grid').should('satisfy', ($el) => {
+                        const isHidden = $el.css('display') === 'none' || !$el.is(':visible')
+                        return isHidden
+                    }, { timeout: 2000 })
                     cy.get('.paver__category-icon').should('not.have.class', 'paver__category-icon--open')
                 })
 
@@ -56,8 +71,8 @@ describe('Editor - Category Collapse State Persistence', () => {
         // Collapse a category
         cy.get('.paver__category').first().within(() => {
             cy.get('.paver__category-toggle').click()
-            cy.wait(300)
-            cy.get('.paver__block-grid').should('not.be.visible')
+            // Wait for Alpine's x-collapse animation to complete
+            cy.get('.paver__block-grid').should('not.be.visible', { timeout: 1000 })
         })
 
         // Enter edit mode
@@ -75,13 +90,11 @@ describe('Editor - Category Collapse State Persistence', () => {
         cy.get('.paver__category').first().within(() => {
             // Should be collapsed, click to open
             cy.get('.paver__category-toggle').click()
-            cy.wait(300)
-            cy.get('.paver__block-grid').should('be.visible')
+            cy.get('.paver__block-grid').should('be.visible', { timeout: 1000 })
 
             // Click again to close
             cy.get('.paver__category-toggle').click()
-            cy.wait(300)
-            cy.get('.paver__block-grid').should('not.be.visible')
+            cy.get('.paver__block-grid').should('not.be.visible', { timeout: 1000 })
         })
     })
 
