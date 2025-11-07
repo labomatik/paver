@@ -51,11 +51,14 @@ jobs:
       - name: Run Cypress tests
         uses: cypress-io/github-action@v6
         with:
+          install: false
           start: php -S localhost:8000 -t ./tests/localhost
           wait-on: 'http://localhost:8000'
           wait-on-timeout: 30
           browser: chrome
           headless: true
+        env:
+          DEBUG: cypress:server:util:process_profiler
 
       - name: Upload Cypress screenshots on failure
         if: failure()
