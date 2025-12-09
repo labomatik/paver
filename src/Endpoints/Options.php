@@ -39,7 +39,7 @@ class Options extends Endpoint
             $displayMode = 'slide-in';
         }
 
-        $html = '<div x-data="'.$data.'" x-init="'.$init.'" @block-change.window="blockChange($event)">';
+        $html = '<div x-data="'.$data.'" x-init="'.$init.'">';
         $html .= $optionsHtml;
         $html .= '</div>';
 

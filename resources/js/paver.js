@@ -235,6 +235,9 @@ window.Paver = function (data) {
             document.addEventListener('loading', () => this.isLoading())
             document.addEventListener('loaded', () => this.isLoaded())
 
+            // Listen for block-change events from popup options
+            document.addEventListener('block-change', (event) => this.blockChange(event))
+
             helpers.listenFromFrame('editingBlock', (event) => {
                 this.edited = false
                 this.editing = true
