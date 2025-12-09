@@ -1,5 +1,7 @@
 describe('Translations', () => {
     const requiredKeys = [
+        'Save',
+        'Cancel',
         'Blocks',
         'Search blocks',
         'No blocks found',

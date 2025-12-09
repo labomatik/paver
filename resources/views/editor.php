@@ -49,6 +49,10 @@
                     </button>
                 </div>
                 <div class="paver__popup-content paver__inside" x-ref="popupContent"></div>
+                <div class="paver__popup-footer">
+                    <button type="button" class="paver__btn paver__btn-secondary paver__popup-cancel-btn"></button>
+                    <button type="button" class="paver__btn paver__btn-primary paver__popup-save-btn"></button>
+                </div>
             </div>
         </div>
     </div>

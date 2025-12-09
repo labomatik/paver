@@ -727,6 +727,16 @@ window.Paver = function (data) {
                     popupCategory.textContent = event.category || ''
                 }
 
+                // Update button labels
+                const cancelBtn = document.querySelector('.paver__popup-cancel-btn')
+                const saveBtn = document.querySelector('.paver__popup-save-btn')
+                if (cancelBtn) {
+                    cancelBtn.textContent = this.text('Cancel')
+                }
+                if (saveBtn) {
+                    saveBtn.textContent = this.text('Save')
+                }
+
                 const popupContent = document.querySelector('.paver__popup-content')
                 if (popupContent) {
                     popupContent.innerHTML = event.html
@@ -765,6 +775,18 @@ window.Paver = function (data) {
             const closeBtn = document.querySelector('.paver__popup-close-btn')
             if (closeBtn) {
                 closeBtn.onclick = () => this.closePopup()
+            }
+
+            // Cancel button handler
+            const cancelBtn = document.querySelector('.paver__popup-cancel-btn')
+            if (cancelBtn) {
+                cancelBtn.onclick = () => this.closePopup()
+            }
+
+            // Save button handler
+            const saveBtn = document.querySelector('.paver__popup-save-btn')
+            if (saveBtn) {
+                saveBtn.onclick = () => this.closePopup()
             }
 
             // Escape key handler
