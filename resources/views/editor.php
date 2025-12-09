@@ -29,6 +29,30 @@
 
     <?php echo new \Jeffreyvr\Paver\View(paver()->viewPath().'editor/sidebar.php'); ?>
 
+    <!-- Popup Modal for category options - controlled via class binding -->
+    <div class="paver__modal-overlay" :class="{ 'paver__modal-visible': popup.visible }" @keydown.escape.window="closePopup()">
+        <!-- Backdrop -->
+        <div class="paver__modal-backdrop" @click="closePopup()"></div>
+
+        <!-- Popup Panel -->
+        <div class="paver__modal-container" @click="closePopup()">
+            <div class="paver__options-popup" @click.stop x-ref="optionsPopup">
+                <div class="paver__popup-header">
+                    <span>
+                        <span x-text="popup.name"></span>
+                        <span class="paver__popup-category" x-text="popup.category"></span>
+                    </span>
+                    <button type="button" @click="closePopup()" class="paver__btn-icon paver__popup-close-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="paver__popup-content paver__inside" x-ref="popupContent"></div>
+            </div>
+        </div>
+    </div>
+
     <input type="hidden" name="paver_editor_content" x-model="content">
 </div>
 

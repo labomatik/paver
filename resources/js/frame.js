@@ -156,7 +156,56 @@ window.PaverFrame = function (data) {
                 this.editingElement = target
 
             } catch (error) {
-                console.log('error', 'Error fetching options:', error)
+                console.error('Error fetching options:', error)
+            }
+        },
+
+        async openCategory(e, category) {
+            let target = null;
+
+            if (e instanceof Event) {
+                if (e.currentTarget.classList.contains('paver__block')) {
+                    target = e.currentTarget
+                } else {
+                    target = e.currentTarget.closest('.paver__block')
+                }
+            } else if (e instanceof HTMLElement) {
+                if (e.classList.contains('paver__block')) {
+                    target = e
+                } else {
+                    target = e.closest('.paver__block')
+                }
+            }
+
+            if (!target) {
+                return
+            }
+
+            this.breadcrumb = this.getBlockBreadcrumb(target)
+
+            let block = JSON.parse(target.getAttribute('data-block'))
+
+            document.querySelectorAll('.paver__active-block').forEach((el) => {
+                el.classList.remove('paver__active-block')
+            })
+
+            target.classList.add('paver__active-block')
+
+            try {
+                const response = await this.api.fetchCategoryOptions(block, category)
+
+                helpers.dispatchToParent('editingBlockCategory', {
+                    html: response.optionsHtml,
+                    name: response.name,
+                    category: category,
+                    displayMode: response.displayMode,
+                    block: { ...{ render: false }, ...JSON.parse(JSON.stringify(block)) }
+                })
+
+                this.editingElement = target
+
+            } catch (error) {
+                console.error('Error fetching category options:', error)
             }
         },
 
@@ -220,28 +269,21 @@ window.PaverFrame = function (data) {
                 // Find all sortable containers within the editing element
                 let sortableContainers = this.editingElement.querySelectorAll('.paver__sortable')
 
-                console.log('[PAVER FRAME] Found sortable containers:', sortableContainers.length)
-
                 if (sortableContainers.length > 1) {
                     // Multiple sortables (like grid cells): create array of arrays
                     let childrenByCell = []
 
-                    sortableContainers.forEach((sortableContainer, index) => {
+                    sortableContainers.forEach((sortableContainer) => {
                         let cellBlocks = gatherBlocks(sortableContainer)
-                        console.log(`[PAVER FRAME] Cell ${index} has ${cellBlocks.length} blocks:`, cellBlocks)
                         childrenByCell.push(cellBlocks)
                     })
 
-                    console.log('[PAVER FRAME] Children by cell:', childrenByCell)
                     editingBlock.children = childrenByCell
                 } else if (sortableContainers.length === 1) {
                     // Single sortable: use flat array (normal behavior)
                     let blocks = gatherBlocks(sortableContainers[0])
-                    console.log('[PAVER FRAME] Single sortable with', blocks.length, 'blocks')
                     editingBlock.children = blocks
                 }
-
-                console.log('[PAVER FRAME] Final editingBlock.children:', editingBlock.children)
 
                 const response = await this.api.renderBlock(editingBlock)
 
@@ -295,7 +337,5 @@ if (!window.Alpine) {
 }
 
 if (window.__paver_start_alpine) {
-    console.log('[PAVER] Starting Alpine.js from frame')
-
     Alpine.start()
 }

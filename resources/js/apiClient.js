@@ -38,6 +38,10 @@ export default class ApiClient {
         return this.fetchData('options', {block, ...payload});
     }
 
+    async fetchCategoryOptions(block, category, payload = {}) {
+        return this.fetchData('options', {block, category, ...payload});
+    }
+
     async fetchBlock(block, payload = {}) {
         return this.fetchData('fetch', {block, ...payload});
     }

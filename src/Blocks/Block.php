@@ -113,6 +113,136 @@ abstract class Block
         return 'This block has no options.';
     }
 
+    /**
+     * Edition options (size, dimensions, content)
+     * @return array|string|null
+     */
+    public function editionOptions()
+    {
+        return null;
+    }
+
+    /**
+     * Style options (colors, appearance)
+     * @return array|string|null
+     */
+    public function styleOptions()
+    {
+        return null;
+    }
+
+    /**
+     * Visibility options (conditional display)
+     * @return array|string|null
+     */
+    public function visibilityOptions()
+    {
+        return null;
+    }
+
+    /**
+     * Display mode for edition options
+     * @return string 'popup' | 'slide-in'
+     */
+    protected function getEditionDisplayMode(): string
+    {
+        return 'slide-in';
+    }
+
+    /**
+     * Display mode for style options
+     * @return string 'popup' | 'slide-in'
+     */
+    protected function getStyleDisplayMode(): string
+    {
+        return 'popup';
+    }
+
+    /**
+     * Display mode for visibility options
+     * @return string 'popup' | 'slide-in'
+     */
+    protected function getVisibilityDisplayMode(): string
+    {
+        return 'popup';
+    }
+
+    /**
+     * Check if block uses the new category system
+     */
+    public function hasOptionCategories(): bool
+    {
+        return $this->editionOptions() !== null
+            || $this->styleOptions() !== null
+            || $this->visibilityOptions() !== null;
+    }
+
+    /**
+     * Get available option categories with metadata
+     */
+    public function getOptionCategories(): array
+    {
+        $categories = [];
+
+        if ($this->editionOptions() !== null) {
+            $categories['edition'] = [
+                'label' => 'Edition',
+                'icon' => 'edition',
+                'displayMode' => $this->getEditionDisplayMode(),
+                'options' => $this->editionOptions(),
+            ];
+        }
+
+        if ($this->styleOptions() !== null) {
+            $categories['style'] = [
+                'label' => 'Style',
+                'icon' => 'style',
+                'displayMode' => $this->getStyleDisplayMode(),
+                'options' => $this->styleOptions(),
+            ];
+        }
+
+        if ($this->visibilityOptions() !== null) {
+            $categories['visibility'] = [
+                'label' => 'Visibility',
+                'icon' => 'visibility',
+                'displayMode' => $this->getVisibilityDisplayMode(),
+                'options' => $this->visibilityOptions(),
+            ];
+        }
+
+        return $categories;
+    }
+
+    /**
+     * Render options for a specific category
+     */
+    public function renderCategoryOptions(string $category): string
+    {
+        $categories = $this->getOptionCategories();
+
+        if (! isset($categories[$category])) {
+            return '';
+        }
+
+        $options = $categories[$category]['options'];
+
+        if (is_array($options)) {
+            $output = '';
+            foreach ($options as $option) {
+                if ($option instanceof Option) {
+                    $output .= $option;
+                } else {
+                    $output .= $option;
+                }
+            }
+
+            return $output;
+        }
+
+        return (string) $options;
+    }
+
     public function renderOptions()
     {
         $options = $this->options();

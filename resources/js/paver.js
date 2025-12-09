@@ -59,6 +59,14 @@ window.Paver = function (data) {
 
         blocksPanelTempOpen: false,
 
+        popup: {
+            visible: false,
+            html: '',
+            name: '',
+            category: '',
+            position: { top: 0, left: 0 }
+        },
+
         buttons: {
             expandButton: data.showExpandButton ?? true,
             viewButton: data.showViewButton ?? true,
@@ -246,6 +254,32 @@ window.Paver = function (data) {
 
                     this.record()
                 })
+            })
+
+            helpers.listenFromFrame('editingBlockCategory', (event) => {
+                this.edited = false
+
+                this.editingBlock = {
+                    ...event.block,
+                    name: event.name,
+                    category: event.category
+                }
+
+                this.log('Editing block category from frame:', event.category, 'displayMode:', event.displayMode, 'name:', event.name)
+
+                if (event.displayMode === 'popup') {
+                    this.showPopup(event)
+                } else {
+                    this.editing = true
+                    this.determineAllowedBlocks()
+
+                    this.$nextTick(() => {
+                        this.$refs.componentSidebar.querySelector('.paver__inside').innerHTML = event.html
+                        this.edited = true
+
+                        this.record()
+                    })
+                }
             })
 
             helpers.listenFromFrame('update', (event) => {
@@ -609,44 +643,35 @@ window.Paver = function (data) {
                 let blocks = list.querySelectorAll(':scope > .paver__sortable-item')
                 let newBlocks = []
 
-                console.log('[PAVER GATHER] Processing', blocks.length, 'sortable items')
-
-                blocks.forEach((block, index) => {
+                blocks.forEach((block) => {
                     // Check if this sortable item has a data-block attribute
                     // Grid cells are sortable-items but don't have data-block
                     if (!block.hasAttribute('data-block')) {
-                        console.log('[PAVER GATHER] Item', index, 'is a WRAPPER (no data-block)')
                         // This is a wrapper (like a grid cell), collect from its sortable container
                         let childList = block.querySelector('.paver__sortable')
                         if (childList) {
                             // Recursively gather blocks from the nested sortable
                             let childBlocks = gatherBlocks(childList)
-                            console.log('[PAVER GATHER] Wrapper contains', childBlocks.length, 'blocks')
                             newBlocks = newBlocks.concat(childBlocks)
                         }
                         return
                     }
 
                     let blockData = JSON.parse(block.getAttribute('data-block'))
-                    console.log('[PAVER GATHER] Item', index, 'is BLOCK:', blockData.block)
 
                     // A block can have multiple sortable containers (e.g., grid cells)
                     let childLists = block.querySelectorAll('.paver__sortable')
-                    console.log('[PAVER GATHER] Block has', childLists.length, 'sortable containers')
 
                     if (childLists.length > 1) {
                         // Multiple sortables (like grid cells): create array of arrays
-                        console.log('[PAVER GATHER] Creating ARRAY OF ARRAYS for', childLists.length, 'cells')
                         let childrenByCell = []
 
-                        childLists.forEach((childList, cellIndex) => {
+                        childLists.forEach((childList) => {
                             let cellBlocks = gatherBlocks(childList)
-                            console.log('[PAVER GATHER] Cell', cellIndex, 'contains', cellBlocks.length, 'blocks')
                             childrenByCell.push(cellBlocks)
                         })
 
                         blockData.children = childrenByCell
-                        console.log('[PAVER GATHER] Final children structure:', JSON.stringify(blockData.children))
                     } else if (childLists.length === 1) {
                         // Single sortable: use flat array (normal behavior)
                         blockData.children = gatherBlocks(childLists[0])
@@ -655,7 +680,6 @@ window.Paver = function (data) {
                     newBlocks.push(blockData)
                 })
 
-                console.log('[PAVER GATHER] Returning', newBlocks.length, 'blocks')
                 return newBlocks
             }
 
@@ -676,6 +700,105 @@ window.Paver = function (data) {
             setTimeout(() => {
                 this.loading = false
             }, 100)
+        },
+
+        showPopup(event) {
+            // Set the popup state
+            this.popup.html = event.html
+            this.popup.name = event.name
+            this.popup.category = event.category
+            this.popup.visible = true
+
+            // Show the modal overlay
+            const modalOverlay = document.querySelector('.paver__modal-overlay')
+            if (modalOverlay) {
+                modalOverlay.classList.add('paver__modal-visible')
+            }
+
+            // Inject content after DOM update
+            setTimeout(() => {
+                const popupContent = document.querySelector('.paver__popup-content')
+                if (popupContent) {
+                    popupContent.innerHTML = event.html
+                    this.log('Popup content injected')
+                } else {
+                    this.log('Popup content element not found')
+                }
+
+                // Add native event listeners for closing
+                this.setupPopupCloseListeners()
+            }, 50)
+
+            this.edited = true
+            this.log('Showing popup (centered)')
+        },
+
+        setupPopupCloseListeners() {
+            // Backdrop click handler
+            const backdrop = document.querySelector('.paver__modal-backdrop')
+            if (backdrop) {
+                backdrop.onclick = () => this.closePopup()
+            }
+
+            // Container click handler (click outside popup)
+            const container = document.querySelector('.paver__modal-container')
+            if (container) {
+                container.onclick = (e) => {
+                    // Only close if clicking directly on container, not on popup
+                    if (e.target === container) {
+                        this.closePopup()
+                    }
+                }
+            }
+
+            // Close button handler
+            const closeBtn = document.querySelector('.paver__popup-close-btn')
+            if (closeBtn) {
+                closeBtn.onclick = () => this.closePopup()
+            }
+
+            // Escape key handler
+            this._escapeHandler = (e) => {
+                if (e.key === 'Escape' && this.popup.visible) {
+                    this.closePopup()
+                }
+            }
+            document.addEventListener('keydown', this._escapeHandler)
+        },
+
+        closePopup() {
+            this.log('closePopup called, current visible state:', this.popup.visible)
+            this.popup.visible = false
+            this.popup.html = ''
+            this.popup.name = ''
+            this.popup.category = ''
+
+            // Hide the modal overlay
+            const modalOverlay = document.querySelector('.paver__modal-overlay')
+            if (modalOverlay) {
+                modalOverlay.classList.remove('paver__modal-visible')
+            }
+
+            // Clear popup content
+            const popupContent = document.querySelector('.paver__popup-content')
+            if (popupContent) {
+                popupContent.innerHTML = ''
+            }
+
+            // Remove escape key listener
+            if (this._escapeHandler) {
+                document.removeEventListener('keydown', this._escapeHandler)
+                this._escapeHandler = null
+            }
+
+            // Remove active block highlight
+            if (this.frame) {
+                this.frame.querySelectorAll('.paver__active-block').forEach((el) => {
+                    el.classList.remove('paver__active-block')
+                })
+            }
+
+            this.log('Popup closed')
         },
 
         async fetchBlock(evt) {
@@ -722,7 +845,5 @@ if(! window.Alpine) {
 }
 
 if(window.__paver_start_alpine) {
-    console.log('[PAVER] Starting Alpine.js')
-
     Alpine.start()
 }

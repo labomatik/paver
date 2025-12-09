@@ -8,6 +8,7 @@ require __DIR__ . '/TestGrid.php';
 require __DIR__ . '/TestLayoutBlock.php';
 require __DIR__ . '/TestContentBlock.php';
 require __DIR__ . '/TestMediaBlock.php';
+require __DIR__ . '/TestCategoryBlock.php';
 
 $paver = Paver::instance();
 
@@ -26,6 +27,7 @@ $paver->registerBlock(TestGrid::class);
 $paver->registerBlock(TestLayoutBlock::class);
 $paver->registerBlock(TestContentBlock::class);
 $paver->registerBlock(TestMediaBlock::class);
+$paver->registerBlock(TestCategoryBlock::class);
 
 $content = [];
 
@@ -49,6 +51,20 @@ if(isset($_GET['grid'])) {
             ],
             // Cell 3: empty
             []
+        ]
+    ];
+}
+
+if(isset($_GET['category'])) {
+    $content[] = [
+        'block' => 'test.category',
+        'data' => [
+            'title' => 'Test Category Block',
+            'width' => '100%',
+            'background_color' => '#f0f9ff',
+            'text_color' => '#1e40af',
+            'visible_on_mobile' => '1',
+            'visible_on_desktop' => '1',
         ]
     ];
 }
