@@ -717,6 +717,16 @@ window.Paver = function (data) {
 
             // Inject content after DOM update
             setTimeout(() => {
+                // Update title and category in DOM directly
+                const popupName = document.querySelector('.paver__popup-name')
+                const popupCategory = document.querySelector('.paver__popup-category')
+                if (popupName) {
+                    popupName.textContent = event.name || ''
+                }
+                if (popupCategory) {
+                    popupCategory.textContent = event.category || ''
+                }
+
                 const popupContent = document.querySelector('.paver__popup-content')
                 if (popupContent) {
                     popupContent.innerHTML = event.html
