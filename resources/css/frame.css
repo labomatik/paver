@@ -224,3 +224,9 @@ body {
     transform: scale(var(--pv-inv, 1));
     transform-origin: top right;
 }
+
+/* Bandeau « configuré » : positionnement de base (hors flux, épinglé haut-droite) */
+.block-configured{position:absolute;top:0;right:0;z-index:50;display:flex;gap:3px;padding:3px;pointer-events:none}
+.block-configured-chip{display:inline-flex;align-items:center;gap:3px;padding:2px 6px}
+.block-configured-chip svg{width:11px;height:11px}
+.sortable-item.hover-block>.block-configured{display:none}
