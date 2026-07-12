@@ -50,3 +50,15 @@ use Jeffreyvr\Paver\Blocks\Options\OptionCategory;
         </button>
     </div>
 </div>
+<?php $configuredCategories = $block->hasOptionCategories() ? $block->getConfiguredCategories() : []; ?>
+<?php if (!empty($configuredCategories)): ?>
+<div class="paver__block-configured">
+    <?php foreach ($configuredCategories as $categoryKey => $categoryLabel): ?>
+    <?php $configuredLabel = function_exists('__') ? __($categoryLabel) : $categoryLabel; ?>
+    <span class="paver__block-configured-chip paver__block-configured-chip--<?php echo $categoryKey; ?>">
+        <?php echo OptionCategory::icon($categoryKey); ?>
+        <span><?php echo htmlspecialchars($configuredLabel, ENT_QUOTES, 'UTF-8'); ?></span>
+    </span>
+    <?php endforeach; ?>
+</div>
+<?php endif; ?>

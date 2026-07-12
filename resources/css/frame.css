@@ -100,3 +100,127 @@ body {
 /* .sortable-item.hover-block:not(.sortable-chosen) > .block-toolbar {
   display: flex;
 } */
+
+/* === Nexcalia UI theme (override) === */
+/* Couche de thème appendée : chrome DANS l'iframe (block-toolbar, bandeau
+   « configuré », breadcrumb, états sortable). Inter Tight peut ne PAS être
+   chargée dans l'iframe → fallback système soigné. Thème clair uniquement. */
+:root {
+    --paver-color-primary: #3359a5;
+    --paver-color-primary-light: #4b6fb7;
+    --paver-color-secondary: #264d91;
+    --paver-color-light: #f3f5fa;
+    --paver-color-dark: #2b3948;
+    --paver-border-radius: 8px;
+    --paver-border-color: #e6eaf1;
+
+    --nx-surface: #ffffff;
+    --nx-ink: #2b3948;
+    --nx-ink-2: #3a4658;
+    --nx-ink-3: #4e5b6c;
+    --nx-line: #e6eaf1;
+    --nx-line-2: #c6cdd8;
+    --nx-primary: #3359a5;
+    --nx-primary-deep: #264d91;
+    --nx-radius-sm: 6px;
+    --nx-font:
+        "Inter Tight", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+        sans-serif;
+}
+
+/* ---- Block toolbar (barre au survol du bloc) ---- */
+.block-toolbar {
+    color: var(--nx-ink);
+    font-family: var(--nx-font);
+    box-shadow: 0 2px 6px rgba(43, 57, 72, 0.18);
+}
+.block-toolbar .block-toolbar-info {
+    background-color: var(--nx-primary);
+    color: #ffffff;
+    font-family: var(--nx-font);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+.block-toolbar button {
+    background-color: var(--nx-primary);
+    border-right: 1px solid rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.82);
+    transition:
+        background-color 0.15s,
+        color 0.15s;
+}
+.block-toolbar button:hover {
+    background-color: var(--nx-primary-deep);
+    color: #ffffff;
+}
+
+/* ---- Breadcrumb ---- */
+.block-breadcrumb {
+    background-color: var(--nx-surface);
+    border-top: 1px solid var(--nx-line);
+    color: var(--nx-ink-2);
+    font-family: var(--nx-font);
+    font-size: 0.78rem;
+    font-weight: 500;
+}
+.block-breadcrumb li {
+    color: var(--nx-ink-2);
+    transition: color 0.15s;
+}
+.block-breadcrumb li:hover {
+    color: var(--nx-primary);
+}
+.block-breadcrumb li svg {
+    color: var(--nx-line-2);
+}
+
+/* ---- États sortable / bloc actif ---- */
+.sortable-item.hover-block:not(.active-block):hover:after {
+    border-color: var(--nx-primary);
+}
+.active-block:after {
+    border: 1px solid var(--nx-primary);
+}
+.sortable-ghost:after {
+    background: var(--nx-primary);
+    border-radius: 999px;
+}
+.sortable-chosen {
+    background: var(--nx-surface);
+}
+
+/* ---- Bandeau « configuré » : 3 tons Nexcalia distincts ---- */
+.block-configured {
+    font-family: var(--nx-font);
+}
+.block-configured-chip {
+    background: var(--nx-primary);
+    border-radius: var(--nx-radius-sm);
+    color: #ffffff;
+    font-family: var(--nx-font);
+    font-size: 0.62rem;
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(43, 57, 72, 0.22);
+}
+.block-configured-chip--edition {
+    background: #1f8a63;
+}
+.block-configured-chip--style {
+    background: #3359a5;
+}
+.block-configured-chip--visibility {
+    background: #a53359;
+}
+
+/* ---- Contre-échelle du chrome : taille apparente constante quel que soit le zoom du preview.
+   --pv-inv (= 1/scale) est injecté dans l'iframe par l'éditeur (edit_screen.blade.php). ---- */
+.block-toolbar {
+    transform: scale(var(--pv-inv, 1));
+    transform-origin: top left;
+    width: calc(100% / var(--pv-inv, 1));
+}
+.block-configured {
+    transform: scale(var(--pv-inv, 1));
+    transform-origin: top right;
+}

@@ -155,7 +155,7 @@ abstract class Block
      */
     protected function getStyleDisplayMode(): string
     {
-        return 'popup';
+        return 'slide-in';
     }
 
     /**
@@ -175,6 +175,55 @@ abstract class Block
         return $this->editionOptions() !== null
             || $this->styleOptions() !== null
             || $this->visibilityOptions() !== null;
+    }
+
+    /**
+     * Categories whose saved data differs from the block defaults.
+     *
+     * @return array<string, string> category key => label
+     */
+    public function getConfiguredCategories(): array
+    {
+        $defaults = (new static)->data;
+        $configured = [];
+
+        foreach ($this->getOptionCategories() as $key => $category) {
+            if ($this->categoryHasCustomValue($category['options'], $defaults)) {
+                $configured[$key] = $category['label'];
+            }
+        }
+
+        return $configured;
+    }
+
+    /**
+     * @param  array|string|null  $options
+     * @param  array<string, mixed>  $defaults
+     */
+    protected function categoryHasCustomValue($options, array $defaults): bool
+    {
+        if (! is_array($options)) {
+            return false;
+        }
+
+        foreach ($options as $option) {
+            if (! $option instanceof Option || ! isset($option->name)) {
+                continue;
+            }
+
+            $name = $option->name;
+            $current = $this->data[$name] ?? null;
+
+            if ($current === null || $current === '') {
+                continue;
+            }
+
+            if ($current !== ($defaults[$name] ?? null)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

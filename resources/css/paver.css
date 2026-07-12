@@ -842,3 +842,456 @@
     width: 16px;
     height: 16px;
 }
+
+/* === Nexcalia UI theme (override) === */
+/* Couche de thème appendée : redéclare les tokens --paver-* vers Nexcalia et
+   restyle le chrome de l'éditeur (hors iframe). Gagne par ordre de cascade.
+   Thème clair uniquement (outil admin). Ne renomme aucune classe paver__*. */
+:root {
+    --paver-color-primary: #3359a5;
+    --paver-color-primary-light: #4b6fb7;
+    --paver-color-secondary: #264d91;
+    --paver-color-light: #f3f5fa;
+    --paver-color-dark: #2b3948;
+    --paver-border-radius: 8px;
+    --paver-border-color: #e6eaf1;
+
+    --nx-surface: #ffffff;
+    --nx-surface-2: #f3f5fa;
+    --nx-bg: #fbfbfd;
+    --nx-ink: #2b3948;
+    --nx-ink-2: #3a4658;
+    --nx-ink-3: #4e5b6c;
+    --nx-line: #e6eaf1;
+    --nx-line-2: #c6cdd8;
+    --nx-hover: #ecf0f6;
+    --nx-primary: #3359a5;
+    --nx-primary-deep: #264d91;
+    --nx-primary-soft: #d4deef;
+    --nx-primary-tint: #ecf0f8;
+    --nx-ok: #57b893;
+    --nx-ok-deep: #1f5f46;
+    --nx-ok-soft: #e7f4ee;
+    --nx-warn: #a53359;
+    --nx-warn-soft: #f8e0e8;
+    --nx-radius: 8px;
+    --nx-radius-sm: 6px;
+    --nx-radius-lg: 12px;
+    --nx-shadow-sm:
+        0 1px 0 rgba(40, 24, 16, 0.04), 0 1px 2px rgba(40, 24, 16, 0.04);
+    --nx-shadow-md:
+        0 1px 0 rgba(40, 24, 16, 0.04), 0 8px 24px rgba(40, 24, 16, 0.08);
+    --nx-shadow-lg:
+        0 12px 40px rgba(40, 24, 16, 0.14), 0 2px 6px rgba(40, 24, 16, 0.06);
+    --nx-ring: 0 0 0 3px rgba(51, 89, 165, 0.16);
+    --nx-font:
+        "Inter Tight", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+        sans-serif;
+}
+
+/* Police + fond général du shell */
+.container {
+    font-family: var(--nx-font);
+    color: var(--nx-ink);
+    background: var(--nx-surface);
+}
+.expanded-editor .container {
+    background-color: var(--nx-surface);
+}
+
+/* ---- Boutons ---- */
+.btn {
+    border-radius: var(--nx-radius-sm);
+    font-family: var(--nx-font);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 9px 16px;
+    transition:
+        background-color 0.15s,
+        border-color 0.15s,
+        box-shadow 0.18s ease-out,
+        transform 0.18s ease-out;
+}
+.btn-primary {
+    background: var(--nx-primary);
+    border: 1px solid var(--nx-primary);
+    color: #ffffff;
+    box-shadow:
+        0 1px 0 rgba(0, 0, 0, 0.06),
+        0 1px 3px rgba(51, 89, 165, 0.2);
+}
+.btn-primary:hover {
+    background: var(--nx-primary-deep);
+    border-color: var(--nx-primary-deep);
+    transform: translateY(-1px);
+    box-shadow:
+        0 2px 0 rgba(0, 0, 0, 0.06),
+        0 6px 18px rgba(51, 89, 165, 0.3);
+}
+.btn-secondary {
+    background: var(--nx-surface);
+    border: 1px solid var(--nx-line);
+    color: var(--nx-ink);
+    box-shadow: var(--nx-shadow-sm);
+}
+.btn-secondary:hover {
+    background: var(--nx-hover);
+    border-color: var(--nx-line-2);
+    transform: translateY(-1px);
+    box-shadow:
+        0 1px 0 rgba(43, 57, 72, 0.04),
+        0 4px 12px rgba(43, 57, 72, 0.1);
+}
+
+/* Bouton texte (barre d'actions : Save) */
+.btn-text {
+    background-color: var(--nx-surface);
+    border: 1px solid var(--nx-line);
+    border-radius: var(--nx-radius-sm);
+    color: var(--nx-ink);
+    font-family: var(--nx-font);
+    font-weight: 500;
+    height: 28px;
+    padding: 0 12px;
+    transition:
+        background-color 0.15s,
+        border-color 0.15s,
+        box-shadow 0.18s ease-out,
+        transform 0.18s ease-out;
+}
+.btn-text:hover {
+    cursor: pointer;
+    background: var(--nx-hover);
+    transform: translateY(-1px);
+}
+.btn-text.btn-text-primary {
+    background-color: var(--nx-primary);
+    border: 1px solid var(--nx-primary);
+    color: #ffffff;
+    box-shadow:
+        0 1px 0 rgba(0, 0, 0, 0.06),
+        0 1px 3px rgba(51, 89, 165, 0.2);
+}
+.btn-text.btn-text-primary:hover {
+    background-color: var(--nx-primary-deep);
+    border-color: var(--nx-primary-deep);
+    box-shadow:
+        0 2px 0 rgba(0, 0, 0, 0.06),
+        0 6px 18px rgba(51, 89, 165, 0.3);
+}
+
+/* Boutons icônes */
+.btn-icon {
+    background-color: var(--nx-surface);
+    border: 1px solid var(--nx-line);
+    border-radius: var(--nx-radius-sm);
+    color: var(--nx-ink-3);
+    transition:
+        background-color 0.15s,
+        border-color 0.15s,
+        color 0.15s,
+        transform 0.15s;
+}
+.btn-icon:hover {
+    background: var(--nx-hover);
+    border-color: var(--nx-line-2);
+    color: var(--nx-primary);
+    cursor: pointer;
+}
+
+/* ---- Sidebar / panneaux ---- */
+.sidebar {
+    border-left: 1px solid var(--nx-line);
+}
+.blocks-panel,
+.options-panel {
+    background: var(--nx-surface);
+    font-family: var(--nx-font);
+}
+
+/* ---- Sections + en-têtes (eyebrow Nexcalia) ---- */
+.section {
+    border-bottom: 1px solid var(--nx-line);
+}
+.section .section-header {
+    background: var(--nx-surface);
+    border-bottom: 1px solid var(--nx-line);
+    color: var(--nx-ink-3);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 12px 14px;
+}
+.section.section-main .section-header {
+    border-bottom: 0;
+}
+.section .section-content {
+    padding: 14px;
+}
+
+/* ---- Champ de recherche des blocs ---- */
+.section .search-blocks {
+    background: var(--nx-surface);
+    border: 1px solid var(--nx-line);
+    border-radius: var(--nx-radius-sm);
+    color: var(--nx-ink);
+    font-family: var(--nx-font);
+    font-size: 13px;
+    padding: 8px 12px;
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
+}
+.section .search-blocks:focus {
+    border-color: var(--nx-primary);
+    box-shadow: var(--nx-ring);
+    outline: none;
+}
+.section .search-blocks::placeholder {
+    color: var(--nx-ink-3);
+}
+
+/* ---- Catégories de blocs ---- */
+.category .category-toggle {
+    border-radius: var(--nx-radius-sm);
+    color: var(--nx-ink-2);
+    font-family: var(--nx-font);
+    font-size: 13px;
+    font-weight: 600;
+}
+.category .category-toggle:hover {
+    background-color: var(--nx-hover);
+    color: var(--nx-ink);
+}
+.category .category-toggle .category-icon {
+    color: var(--nx-ink-3);
+}
+
+/* ---- Grille de blocs (cartes) ---- */
+.sidebar .block-grid .block-handle {
+    background-color: var(--nx-surface);
+    border: 1px solid var(--nx-line);
+    border-radius: var(--nx-radius-sm);
+    color: var(--nx-ink-2);
+    box-shadow: var(--nx-shadow-sm);
+    font-family: var(--nx-font);
+    padding: 12px 8px;
+    transition:
+        background-color 0.15s,
+        border-color 0.15s,
+        color 0.15s,
+        box-shadow 0.15s,
+        transform 0.15s;
+}
+.sidebar .block-grid .block-handle:hover {
+    background-color: var(--nx-primary-tint);
+    border-color: var(--nx-primary);
+    color: var(--nx-primary-deep);
+    box-shadow:
+        0 1px 0 rgba(43, 57, 72, 0.04),
+        0 4px 12px rgba(43, 57, 72, 0.08);
+    transform: translateY(-1px);
+}
+
+/* ---- Bouton bascule du panneau de blocs ---- */
+.blocks-toggle-btn {
+    background: var(--nx-primary);
+    border-radius: var(--nx-radius-sm) 0 0 var(--nx-radius-sm);
+    box-shadow: -2px 2px 10px rgba(43, 57, 72, 0.14);
+    color: #ffffff;
+}
+.blocks-toggle-btn:hover {
+    background: var(--nx-primary-deep);
+}
+
+/* ---- Bouton expand (afficher plus) ---- */
+.expand-btn {
+    color: var(--nx-ink-3);
+    font-family: var(--nx-font);
+    font-size: 13px;
+    font-weight: 500;
+    transition: color 0.15s;
+}
+.expand-btn:hover {
+    color: var(--nx-primary);
+}
+
+/* ---- Resizer ---- */
+.resizer {
+    background: transparent;
+    transition: background-color 0.15s;
+}
+.resizer:hover {
+    background: var(--nx-primary);
+}
+
+/* ---- Spinner ---- */
+.loading-spinner {
+    color: var(--nx-primary);
+}
+
+/* ---- Modale popup d'options ---- */
+.modal-backdrop {
+    backdrop-filter: blur(3px);
+    background: rgba(20, 27, 42, 0.42);
+}
+.options-popup {
+    background: var(--nx-surface);
+    border: 1px solid var(--nx-line);
+    border-radius: var(--nx-radius-lg);
+    box-shadow: var(--nx-shadow-lg);
+    font-family: var(--nx-font);
+}
+.popup-header {
+    background: var(--nx-surface);
+    border-bottom: 1px solid var(--nx-line);
+    padding: 16px 20px;
+}
+.popup-name {
+    color: var(--nx-ink);
+    font-family: var(--nx-font);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+.popup-category {
+    background: var(--nx-primary-tint);
+    border-radius: 999px;
+    color: var(--nx-primary-deep);
+    font-family: var(--nx-font);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+}
+.popup-close-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--nx-radius-sm);
+    color: var(--nx-ink-3);
+}
+.popup-close-btn:hover {
+    background: var(--nx-hover);
+    color: var(--nx-ink);
+}
+.popup-footer {
+    background: var(--nx-surface);
+    border-top: 1px solid var(--nx-line);
+    padding: 16px 20px;
+}
+.popup-content {
+    background: var(--nx-surface);
+}
+
+/* ---- Contrôles de formulaire (popup + panneau) ---- */
+.section .option label,
+.popup-content .option > label {
+    color: var(--nx-ink-2);
+    font-family: var(--nx-font);
+    font-size: 13px;
+    font-weight: 500;
+}
+.section .option input[type="number"],
+.section .option input[type="text"],
+.section .option select,
+.section .option textarea,
+.popup-content .option input[type="color"],
+.popup-content .option input[type="email"],
+.popup-content .option input[type="number"],
+.popup-content .option input[type="text"],
+.popup-content .option input[type="url"],
+.popup-content .option select,
+.popup-content .option textarea {
+    background-color: var(--nx-surface);
+    border: 1px solid var(--nx-line);
+    border-radius: var(--nx-radius-sm);
+    color: var(--nx-ink);
+    font-family: var(--nx-font);
+    box-shadow: var(--nx-shadow-sm);
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
+}
+.section .option input:focus,
+.section .option select:focus,
+.section .option textarea:focus,
+.popup-content .option input:focus,
+.popup-content .option select:focus,
+.popup-content .option textarea:focus {
+    border-color: var(--nx-primary);
+    box-shadow: var(--nx-ring);
+    outline: none;
+}
+.popup-content .option input:hover,
+.popup-content .option select:hover,
+.popup-content .option textarea:hover {
+    border-color: var(--nx-line-2);
+}
+.popup-content .option input::placeholder,
+.popup-content .option textarea::placeholder {
+    color: var(--nx-ink-3);
+}
+
+/* Multiselect */
+.popup-content .option select.multiselect option:checked,
+.popup-content .option select[multiple] option:checked {
+    background: var(--nx-primary-tint);
+    color: var(--nx-primary-deep);
+    font-weight: 500;
+}
+.popup-content .option select.multiselect option:hover,
+.popup-content .option select[multiple] option:hover {
+    background-color: var(--nx-hover);
+}
+
+/* Cases / radios */
+.popup-content .option input[type="checkbox"],
+.popup-content .option input[type="radio"] {
+    accent-color: var(--nx-primary);
+}
+.popup-content .option .checkbox-label,
+.popup-content .option .radio-label {
+    color: var(--nx-ink-2);
+    font-family: var(--nx-font);
+}
+
+/* Texte d'aide */
+.popup-content .help-text,
+.popup-content .option small {
+    background-color: var(--nx-primary-tint);
+    border-left: 3px solid var(--nx-primary);
+    border-radius: var(--nx-radius-sm);
+    color: var(--nx-ink-3);
+}
+
+/* Divider + titre de section dans le popup */
+.popup-content .divider {
+    background: var(--nx-line);
+}
+.popup-content .section-title {
+    border-bottom: 1px solid var(--nx-line);
+    color: var(--nx-ink-3);
+    font-family: var(--nx-font);
+    letter-spacing: 0.08em;
+}
+
+/* Scrollbars des panneaux */
+.popup-content::-webkit-scrollbar-thumb,
+.blocks-panel::-webkit-scrollbar-thumb,
+.options-panel::-webkit-scrollbar-thumb {
+    background: var(--nx-line-2);
+    border-radius: 999px;
+}
+.popup-content::-webkit-scrollbar-thumb:hover,
+.blocks-panel::-webkit-scrollbar-thumb:hover,
+.options-panel::-webkit-scrollbar-thumb:hover {
+    background: var(--nx-ink-3);
+}
+.blocks-panel::-webkit-scrollbar,
+.options-panel::-webkit-scrollbar {
+    width: 8px;
+}
+.blocks-panel::-webkit-scrollbar-track,
+.options-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
