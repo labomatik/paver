@@ -80,6 +80,8 @@ window.Paver = function (data) {
         // over postMessage; this editor never touches its DOM.
         canvas: data.canvas ?? 'server',
 
+        tileDragged: false,
+
         log(...args) {
             if (!this.debug) {
                 return
@@ -220,7 +222,20 @@ window.Paver = function (data) {
             if (this.canvas === 'react') {
                 sortableContainers.forEach((container) => {
                     container.querySelectorAll('[data-block]').forEach((tile) => {
-                        tile.addEventListener('click', () => this.insertIntoReactCanvas(JSON.parse(tile.getAttribute('data-block'))))
+                        tile.style.touchAction = 'none'
+
+                        tile.addEventListener('pointerdown', (event) => this.watchTileDrag(event, tile))
+
+                        tile.addEventListener('click', () => {
+                            // The click that ends a drag is not a request to insert.
+                            if (this.tileDragged) {
+                                this.tileDragged = false
+
+                                return
+                            }
+
+                            this.insertIntoReactCanvas(JSON.parse(tile.getAttribute('data-block')))
+                        })
                     })
                 })
 
@@ -907,6 +922,88 @@ window.Paver = function (data) {
             }
 
             this.log('Popup closed')
+        },
+
+        // Dragging a tile into a canvas this editor does not own: the tile is followed
+        // here, and the canvas is told where the pointer is, in its own coordinates.
+        watchTileDrag(down, tile) {
+            if (down.button !== 0) {
+                return
+            }
+
+            const block = JSON.parse(tile.getAttribute('data-block'))
+            const iframe = this.$refs.editor
+            let ghost = null
+
+            // Captured from the press: a quick gesture leaves the tile before its first
+            // move, and over the iframe the pointer would otherwise belong to the frame.
+            // No text selection, no native drag; the click still comes through.
+            down.preventDefault()
+            tile.setPointerCapture(down.pointerId)
+
+            // The page may scale the iframe down: map the pointer back into the frame.
+            const inFrame = (event) => {
+                const rect = iframe.getBoundingClientRect()
+                const x = (event.clientX - rect.left) / (rect.width / iframe.offsetWidth)
+                const y = (event.clientY - rect.top) / (rect.height / iframe.offsetHeight)
+                const inside = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom
+
+                return inside ? {x, y} : null
+            }
+
+            const move = (event) => {
+                if (! ghost) {
+                    if (Math.hypot(event.clientX - down.clientX, event.clientY - down.clientY) < 5) {
+                        return
+                    }
+
+                    ghost = tile.cloneNode(true)
+                    ghost.setAttribute('x-ignore', '')
+                    Object.assign(ghost.style, {position: 'fixed', zIndex: 2147483647, pointerEvents: 'none', opacity: 0.85, width: tile.offsetWidth + 'px', margin: 0})
+                    document.body.appendChild(ghost)
+                    document.body.style.userSelect = 'none'
+
+                    helpers.dispatchToFrame(iframe, 'dragStart', {block})
+                }
+
+                event.preventDefault()
+
+                ghost.style.left = (event.clientX - tile.offsetWidth / 2) + 'px'
+                ghost.style.top = (event.clientY - tile.offsetHeight / 2) + 'px'
+
+                const point = inFrame(event)
+
+                helpers.dispatchToFrame(iframe, point ? 'dragMove' : 'dragLeave', point)
+            }
+
+            const stop = (event, cancelled = false) => {
+                tile.removeEventListener('pointermove', move)
+                tile.removeEventListener('pointerup', end)
+                tile.removeEventListener('pointercancel', abort)
+                document.removeEventListener('keydown', escape)
+
+                if (! ghost) {
+                    return
+                }
+
+                ghost.remove()
+                document.body.style.userSelect = ''
+                this.tileDragged = true
+                this.blocksPanelTempOpen = false
+
+                const point = cancelled ? null : inFrame(event)
+
+                helpers.dispatchToFrame(iframe, point ? 'drop' : 'dragCancel', point)
+            }
+
+            const end = (event) => stop(event)
+            const abort = (event) => stop(event, true)
+            const escape = (event) => event.key === 'Escape' && stop(event, true)
+
+            tile.addEventListener('pointermove', move)
+            tile.addEventListener('pointerup', end)
+            tile.addEventListener('pointercancel', abort)
+            document.addEventListener('keydown', escape)
         },
 
         async insertIntoReactCanvas(block) {
