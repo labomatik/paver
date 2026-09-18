@@ -82,6 +82,8 @@ window.Paver = function (data) {
 
         tileDragged: false,
 
+        canvasAllowedBlocks: [],
+
         log(...args) {
             if (!this.debug) {
                 return
@@ -174,7 +176,11 @@ window.Paver = function (data) {
         determineAllowedBlocks() {
             this.allowedBlocks = []
 
+            // A React canvas says which blocks the edited container takes; the server
+            // frame carries them on the first zone of the active block.
             if (this.canvas === 'react') {
+                this.allowedBlocks = [...this.canvasAllowedBlocks]
+
                 return
             }
 
@@ -301,6 +307,7 @@ window.Paver = function (data) {
             helpers.listenFromFrame('editingBlock', (event) => {
                 this.edited = false
                 this.editing = true
+                this.canvasAllowedBlocks = event.allowedBlocks ?? []
 
                 this.editingBlock = {
                     name: event.name,
@@ -321,6 +328,7 @@ window.Paver = function (data) {
 
             helpers.listenFromFrame('editingBlockCategory', (event) => {
                 this.edited = false
+                this.canvasAllowedBlocks = event.allowedBlocks ?? []
 
                 this.editingBlock = {
                     ...event.block,
