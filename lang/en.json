@@ -23,5 +23,7 @@
     "Change": "Change",
     "Replace": "Replace",
     "Are you sure you want to delete this block?": "Are you sure you want to delete this block?",
-    "Do you really want to follow this link?": "Do you really want to follow this link?"
+    "Do you really want to follow this link?": "Do you really want to follow this link?",
+    "Undo": "Undo",
+    "Redo": "Redo"
 }

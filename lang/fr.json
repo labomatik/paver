@@ -23,5 +23,7 @@
     "Change": "Modifier",
     "Replace": "Remplacer",
     "Are you sure you want to delete this block?": "Êtes-vous sûr de vouloir supprimer ce bloc ?",
-    "Do you really want to follow this link?": "Voulez-vous vraiment suivre ce lien ?"
+    "Do you really want to follow this link?": "Voulez-vous vraiment suivre ce lien ?",
+    "Undo": "Annuler",
+    "Redo": "Rétablir"
 }

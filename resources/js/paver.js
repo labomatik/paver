@@ -33,6 +33,10 @@ window.Paver = function (data) {
 
         allowedBlocks: [],
 
+        undoable: false,
+
+        redoable: false,
+
         editingBlock: null,
 
         edited: false,
@@ -96,6 +100,36 @@ window.Paver = function (data) {
             this.$dispatch('paver-save', {content: this.content})
         },
 
+        // A React canvas keeps the layout: undo and redo hand it the one to show.
+        restoreLayout(content) {
+            this.content = content
+
+            helpers.dispatchToFrame(this.$refs.editor, 'setLayout', JSON.parse(content))
+
+            this.$dispatch('paver-change', {content: this.content})
+
+            this.exitEditMode()
+
+            this.countHistory()
+        },
+
+        redo() {
+            if (this.canvas !== 'react') {
+                return
+            }
+
+            const entry = this.history.redo()
+
+            if (entry) {
+                this.restoreLayout(entry.content)
+            }
+        },
+
+        countHistory() {
+            this.undoable = this.history.get().length > 1
+            this.redoable = this.history.undone.length > 0
+        },
+
         revert() {
             if (this.history.get().length > 1 === false) {
                 return
@@ -108,11 +142,7 @@ window.Paver = function (data) {
             this.log('Restoring =', last)
 
             if (this.canvas === 'react') {
-                this.content = last.content
-
-                helpers.dispatchToFrame(this.$refs.editor, 'setLayout', JSON.parse(last.content))
-
-                this.exitEditMode()
+                this.restoreLayout(last.content)
 
                 return
             }
@@ -203,6 +233,7 @@ window.Paver = function (data) {
 
         init() {
             if (this.canvas === 'react') {
+                helpers.trustedFrame = () => this.$refs.editor?.contentWindow
                 this.waitForReactCanvas()
             } else {
                 this.waitForFrame()
@@ -215,6 +246,7 @@ window.Paver = function (data) {
             this.watchers()
 
             Shortcuts.revert(() => this.revert())
+            Shortcuts.redo(() => this.redo())
             Shortcuts.expand(() => this.toggleExpand())
             Shortcuts.exit(() => this.handleEscape())
 
@@ -286,6 +318,8 @@ window.Paver = function (data) {
             helpers.listenFromFrame('exit', (event) => this.handleEscape())
 
             helpers.listenFromFrame('revert', (event) => this.revert())
+
+            helpers.listenFromFrame('redo', (event) => this.redo())
 
             helpers.listenFromFrame('expand', (event) => this.toggleExpand())
 
@@ -588,6 +622,12 @@ window.Paver = function (data) {
         },
 
         record() {
+            // Opening the options of a block changes nothing in a React canvas: an entry
+            // for it would make undo do nothing, and would throw away what can be redone.
+            if (this.canvas === 'react' && this.history.last()?.content === this.content) {
+                return
+            }
+
             let record = {
                 root: this.canvas === 'react' ? null : this.root().outerHTML,
                 content: this.content,
@@ -599,6 +639,8 @@ window.Paver = function (data) {
             }
 
             this.history.add(record)
+
+            this.countHistory()
 
             this.log('Recorded entry in history', this.history)
         },

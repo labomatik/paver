@@ -1,12 +1,29 @@
 const History = {
     entries: [],
+    undone: [],
 
+    // A new entry opens another branch: what was undone can no longer come back.
     add(entry) {
         this.entries.push(entry)
+        this.undone = []
     },
 
     revert() {
-        this.entries.pop()
+        const entry = this.entries.pop()
+
+        if (entry) {
+            this.undone.push(entry)
+        }
+    },
+
+    redo() {
+        const entry = this.undone.pop()
+
+        if (entry) {
+            this.entries.push(entry)
+        }
+
+        return entry ?? null
     },
 
     last() {
@@ -15,6 +32,7 @@ const History = {
 
     clear() {
         this.entries = []
+        this.undone = []
     },
 
     get() {

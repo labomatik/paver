@@ -376,28 +376,33 @@
     background: #fff;
     z-index: 2;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .blocks-toggle-btn {
     position: absolute;
     top: 45px;
-    right: -24px;
+    /* The tab shows its first 12px and unfolds on hover. It never reaches past the
+       panel: anything that did made the panel scroll sideways. */
+    right: 0;
     z-index: 10;
     background: var(--paver-color-primary);
     color: #fff;
     border: none;
     border-radius: 5px 0 0 5px;
-    width: 36px;
+    width: 12px;
     height: 36px;
+    padding: 0 0 0 8px;
+    overflow: hidden;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: -2px 2px 8px rgba(0, 0, 0, 0.1);
 
     &:hover {
-        right: 0;
+        width: 36px;
         background: var(--paver-color-primary-light);
     }
 
@@ -406,6 +411,7 @@
     }
 
     svg {
+        flex: none;
         width: 20px;
         height: 20px;
     }

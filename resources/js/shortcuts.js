@@ -1,7 +1,19 @@
 const Shortcuts = {
     revert(callback) {
         document.addEventListener('keydown', (event) => {
-            if (event.metaKey && event.key === 'z') {
+            if ((event.metaKey || event.ctrlKey) && ! event.shiftKey && event.key === 'z') {
+                event.preventDefault()
+
+                callback()
+            }
+        })
+    },
+
+    redo(callback) {
+        document.addEventListener('keydown', (event) => {
+            const combo = event.metaKey || event.ctrlKey
+
+            if (combo && ((event.shiftKey && event.key.toLowerCase() === 'z') || event.key === 'y')) {
                 event.preventDefault()
 
                 callback()

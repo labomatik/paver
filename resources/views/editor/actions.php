@@ -6,6 +6,19 @@
         </svg>
     </div>
 
+    <div x-cloak class="paver__flex paver__items-center" x-show="canvas === 'react'">
+        <button type="button" @click="revert" :disabled="! undoable" :style="undoable ? '' : 'opacity: 0.35; cursor: default'" class="paver__btn-icon" x-paver-tooltip="text('Undo')">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+            </svg>
+        </button>
+        <button type="button" @click="redo" :disabled="! redoable" :style="redoable ? '' : 'opacity: 0.35; cursor: default'" class="paver__btn-icon" x-paver-tooltip="text('Redo')">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m15 15 6-6m0 0-6-6m6 6H9a6 6 0 0 0 0 12h3" />
+            </svg>
+        </button>
+    </div>
+
     <div x-cloak class="paver__hide-on-mobile" x-show="buttons.expandButton">
         <button type="button" @click="toggleExpand" x-show="!expanded" class="paver__btn-icon" x-paver-tooltip="text('Expand')">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
