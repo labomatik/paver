@@ -75,6 +75,11 @@ window.Paver = function (data) {
 
         allowRootDrop: false,
 
+        // 'server': this editor renders and serialises the frame (default).
+        // 'react': the frame is an application that owns the layout and talks
+        // over postMessage; this editor never touches its DOM.
+        canvas: data.canvas ?? 'server',
+
         log(...args) {
             if (!this.debug) {
                 return
@@ -97,6 +102,16 @@ window.Paver = function (data) {
             let last = this.history.last()
 
             this.log('Restoring =', last)
+
+            if (this.canvas === 'react') {
+                this.content = last.content
+
+                helpers.dispatchToFrame(this.$refs.editor, 'setLayout', JSON.parse(last.content))
+
+                this.exitEditMode()
+
+                return
+            }
 
             if (last.editingBlock === null) {
                 this.exitEditMode()
@@ -128,7 +143,11 @@ window.Paver = function (data) {
         exitEditMode() {
             this.editing = false
 
-            this.frame.querySelectorAll('.paver__active-block').forEach((el) => el.classList.remove('paver__active-block'))
+            if (this.canvas === 'react') {
+                helpers.dispatchToFrame(this.$refs.editor, 'clearSelection')
+            } else {
+                this.frame.querySelectorAll('.paver__active-block').forEach((el) => el.classList.remove('paver__active-block'))
+            }
 
             this.$nextTick(() => {
                 this.editingBlock = null
@@ -153,6 +172,10 @@ window.Paver = function (data) {
         determineAllowedBlocks() {
             this.allowedBlocks = []
 
+            if (this.canvas === 'react') {
+                return
+            }
+
             let element = this.root().querySelector('.paver__active-block .paver__sortable')
 
             if(! element) {
@@ -171,7 +194,11 @@ window.Paver = function (data) {
         },
 
         init() {
-            this.waitForFrame()
+            if (this.canvas === 'react') {
+                this.waitForReactCanvas()
+            } else {
+                this.waitForFrame()
+            }
 
             this.listeners()
 
@@ -189,6 +216,16 @@ window.Paver = function (data) {
 
         initializeSortableCategories() {
             const sortableContainers = document.querySelectorAll('.paver__category .paver__sortable')
+
+            if (this.canvas === 'react') {
+                sortableContainers.forEach((container) => {
+                    container.querySelectorAll('[data-block]').forEach((tile) => {
+                        tile.addEventListener('click', () => this.insertIntoReactCanvas(JSON.parse(tile.getAttribute('data-block'))))
+                    })
+                })
+
+                return
+            }
 
             sortableContainers.forEach((container) => {
                 Sortable.create(container, {
@@ -215,7 +252,15 @@ window.Paver = function (data) {
         },
 
         listeners() {
-            helpers.listenFromFrame('blocks', (blocks) => this.content = JSON.stringify(blocks))
+            helpers.listenFromFrame('blocks', (blocks) => {
+                this.content = JSON.stringify(blocks)
+
+                if (this.canvas === 'react') {
+                    this.$dispatch('paver-change', {content: this.content})
+
+                    this.record()
+                }
+            })
 
             helpers.listenFromFrame('exit', (event) => this.handleEscape())
 
@@ -286,6 +331,11 @@ window.Paver = function (data) {
             })
 
             helpers.listenFromFrame('update', (event) => {
+                // A React canvas changes its own layout and reports it with 'blocks'.
+                if (this.canvas === 'react') {
+                    return
+                }
+
                 this.log('Updating editor content')
 
                 let nestedSortables = this.root().querySelectorAll('.paver__sortable')
@@ -300,6 +350,11 @@ window.Paver = function (data) {
             })
 
             helpers.listenFromFrame('delete', (block) => {
+                // A React canvas changes its own layout and reports it with 'blocks'.
+                if (this.canvas === 'react') {
+                    return
+                }
+
                 this.log('Deleting block')
 
                 let blockElement = this.root().querySelector('[data-id="' + block + '"]')
@@ -316,6 +371,11 @@ window.Paver = function (data) {
             })
 
             helpers.listenFromFrame('clone', (block) => {
+                // A React canvas changes its own layout and reports it with 'blocks'.
+                if (this.canvas === 'react') {
+                    return
+                }
+
                 this.log('Cloning block')
 
                 let newBlock = document.createElement('div')
@@ -474,6 +534,18 @@ window.Paver = function (data) {
             return this.frame.querySelector('.paver__editor-root')
         },
 
+        waitForReactCanvas() {
+            helpers.listenFromFrame('ready', () => {
+                this.frame = this.$refs.editor.contentDocument || this.$refs.editor.contentWindow.document
+
+                this.record()
+
+                this.loading = false
+
+                this.$dispatch('paver-ready')
+            })
+        },
+
         waitForFrame() {
             const interval = setInterval(() => {
                 this.frame = this.$refs.editor.contentDocument || this.$refs.editor.contentWindow.document
@@ -494,7 +566,8 @@ window.Paver = function (data) {
 
         record() {
             let record = {
-                root: this.root().outerHTML,
+                root: this.canvas === 'react' ? null : this.root().outerHTML,
+                content: this.content,
                 editingBlock: JSON.parse(JSON.stringify(this.editingBlock)),
             }
 
@@ -834,6 +907,20 @@ window.Paver = function (data) {
             }
 
             this.log('Popup closed')
+        },
+
+        async insertIntoReactCanvas(block) {
+            try {
+                const response = await this.api.fetchBlock(block.block, this.api.payload)
+
+                helpers.dispatchToFrame(this.$refs.editor, 'insertBlock', {
+                    block: {...block, data: response.data, children: []}
+                })
+
+                this.blocksPanelTempOpen = false
+            } catch (error) {
+                this.log('error', 'Error inserting block:', error)
+            }
         },
 
         async fetchBlock(evt) {

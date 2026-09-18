@@ -23,7 +23,11 @@
             <iframe x-ref="editor" id="editor"
                 class="paver__editor"
                 :class="view == 'desktop' ? 'paver__desktop' : 'paver__mobile'"
-                srcdoc="<?php echo htmlspecialchars($editorHtml, ENT_QUOTES, 'UTF-8'); ?>"></iframe>
+                <?php if (($config['canvas'] ?? 'server') === 'react' && ! empty($config['canvasUrl'])): ?>
+                src="<?php echo htmlspecialchars($config['canvasUrl'], ENT_QUOTES, 'UTF-8'); ?>"
+                <?php else: ?>
+                srcdoc="<?php echo htmlspecialchars($editorHtml, ENT_QUOTES, 'UTF-8'); ?>"
+                <?php endif; ?>></iframe>
         </div>
     </div>
 
